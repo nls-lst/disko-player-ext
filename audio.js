@@ -46,29 +46,25 @@ function getRoot() {
   return `${base}${id || ""}`;
 }
 
-// State derived from metadata.json
-let albumJson = null; // the raw JSON
-let disks = []; // array of disk objects with {diskNum, audioUrl, streamUrl, title, performer, tracks}
-let tracks = []; // unified tracks array across all disks with {diskNum, diskTrackIndex, globalIndex, title, performer, index, duration, audioUrl}
-let coverUrl = undefined; // resolved cover image
-let pdfUrl = undefined; // resolved pdf
-let albumTitle = ""; // overall album title
-let albumPerformer = ""; // overall album performer
-let useRestriction = ""; // use restriction from metadata.json
+let albumJson = null;
+let disks = [];
+let tracks = [];
+let coverUrl = undefined;
+let pdfUrl = undefined;
+let albumTitle = "";
+let albumPerformer = "";
+let useRestriction = "";
 let currentTrackIndex = 0;
 let sound = null;
 let isPlaying = false;
 let progressInterval = null;
 
-// === JSON metadata loader helpers ===
 function parseTimecode(tc) {
-  // Timecode is always mm:ss:ff where ff are 75fps frames
+  // Parse timecode format: mm:ss:ff (75fps frames)
   if (!tc) return 0;
 
-  // Trim whitespace and handle malformed timecodes like "01 14:34:33"
   let cleaned = tc.trim();
 
-  // If there's a space before the first colon, remove everything before it
   if (cleaned.includes(" ") && cleaned.indexOf(" ") < cleaned.indexOf(":")) {
     cleaned = cleaned.substring(cleaned.indexOf(" ") + 1);
   }
@@ -88,18 +84,15 @@ function resolveUrl(path, diskNum = null) {
   if (/^https?:\/\//i.test(path)) return path;
   const root = getRoot();
 
-  // If disk number is provided, add disk folder structure
   let fullPath = path;
   if (diskNum !== null) {
     fullPath = `disks/disk ${diskNum}/${path}`;
   }
 
-  // Ensure single slash between root and path
   const sep = root.endsWith("/") || fullPath.startsWith("/") ? "" : "/";
   return `${root}${sep}${fullPath}`;
 }
 
-// Show an access message when S3 is unreachable (likely offsite)
 function showAccessRestrictionMessage() {
   const containerId = "audio-player-container";
   let container = document.getElementById(containerId);
@@ -109,19 +102,16 @@ function showAccessRestrictionMessage() {
     document.body.appendChild(container);
   }
 
-  // Clear existing content
   container.innerHTML = "";
 
   const msg = document.createElement("div");
   msg.className = "audio-access-message";
 
-  // Add headphones icon
   const iconDiv = document.createElement("div");
   iconDiv.className = "access-message-icon";
   iconDiv.innerHTML = SVG_ICONS.headphones;
   msg.appendChild(iconDiv);
 
-  // Add text content
   const textDiv = document.createElement("div");
   textDiv.className = "access-message-text";
 
@@ -160,7 +150,6 @@ async function loadMetadataJson() {
   albumTitle = firstCue.TITLE || "";
   albumPerformer = firstCue.PERFORMER || "";
 
-  // Cover: use scans["30"] which is 1000 width per spec; fallback to any available
   coverUrl = undefined;
   if (data.scans) {
     const s30 = data.scans["30"];
@@ -196,7 +185,6 @@ async function loadMetadataJson() {
     }
   }
 
-  // PDF if present
   pdfUrl = undefined;
   if (data.scans) {
     for (const key of Object.keys(data.scans)) {
@@ -211,7 +199,6 @@ async function loadMetadataJson() {
     }
   }
 
-  // Process ALL disks and build unified tracks array
   disks = [];
   tracks = [];
   let globalIndex = 0;
@@ -233,7 +220,6 @@ async function loadMetadataJson() {
       audioUrl: audioUrl,
     }));
 
-    // Compute durations for this disk's tracks
     for (let i = 0; i < diskTracks.length - 1; i++) {
       diskTracks[i].duration = Math.max(
         0,
@@ -241,7 +227,6 @@ async function loadMetadataJson() {
       );
     }
 
-    // Compute final track duration when audio metadata loads
     if (diskTracks.length && audioUrl) {
       const lastIdx = diskTracks.length - 1;
       const audio = new Audio(audioUrl);
@@ -277,7 +262,7 @@ function createMusicPlayer(retries = 5) {
     console.log(
       `audio-player-container not found, retrying... (${retries} attempts left)`
     );
-    setTimeout(() => createMusicPlayer(retries - 1), 1000); // Wait 1 second before retry
+    setTimeout(() => createMusicPlayer(retries - 1), 1000);
     return;
   }
 
@@ -289,7 +274,6 @@ function createMusicPlayer(retries = 5) {
   const container = document.createElement("div");
   container.id = "audio-player";
 
-  // === Playlist Section ===
   const playlistDiv = document.createElement("div");
   playlistDiv.classList.add("playlist");
 
@@ -298,7 +282,6 @@ function createMusicPlayer(retries = 5) {
 
   playlistDiv.appendChild(playlistTitle);
 
-  // Add disk navigation if multiple disks
   if (disks.length > 1) {
     const diskNav = document.createElement("div");
     diskNav.classList.add("disk-navigation");
@@ -322,16 +305,13 @@ function createMusicPlayer(retries = 5) {
 
   const tracksContainer = document.createElement("div");
 
-  // Create track elements from JSON-derived tracks, grouped by disk
   const createTrackElements = () => {
     let currentDiskNum = null;
 
     tracks.forEach((track) => {
-      // Add disk heading if we're starting a new disk (only for multi-disk albums)
       if (track.diskNum !== currentDiskNum) {
         currentDiskNum = track.diskNum;
 
-        // Only show disk headings if there are multiple disks
         if (disks.length > 1) {
           const diskHeading = document.createElement("div");
           diskHeading.id = `disk-${track.diskNum}`;
@@ -386,7 +366,6 @@ function createMusicPlayer(retries = 5) {
 
   playlistDiv.appendChild(tracksContainer);
 
-  // === Album Section ===
   const albumDiv = document.createElement("div");
   albumDiv.classList.add("album");
 
@@ -396,14 +375,6 @@ function createMusicPlayer(retries = 5) {
   const albumImage = document.createElement("img");
   albumImage.src = coverUrl || "https://placehold.co/200x200";
   albumImage.alt = "Album Art";
-
-  // Make album image clickable if PDF exists (commented out for demo)
-  // if (isCueFile && cueData.metadata.pdf) {
-  //   albumImage.style.cursor = "pointer";
-  //   albumImage.addEventListener("click", () => {
-  //     window.open(cueData.metadata.pdf, "_blank");
-  //   });
-  // }
 
   const albumInfo = document.createElement("div");
   albumInfo.classList.add("info");
@@ -438,11 +409,9 @@ function createMusicPlayer(retries = 5) {
   albumDiv.appendChild(albumDetails);
   albumDiv.appendChild(nowPlaying);
 
-  // === Progress Bar ===
   const progressContainer = document.createElement("div");
   progressContainer.classList.add("progress-container");
 
-  // Time Display
   const timeDisplay = document.createElement("div");
   timeDisplay.classList.add("time-display");
   timeDisplay.textContent = "0:00 / 0:00";
@@ -464,7 +433,6 @@ function createMusicPlayer(retries = 5) {
   progressContainer.appendChild(progressBar);
   albumDiv.appendChild(progressContainer);
 
-  // === Controls (Prev, Play, Next, Volume) ===
   const controlsDiv = document.createElement("div");
   controlsDiv.classList.add("controls");
 
@@ -480,7 +448,6 @@ function createMusicPlayer(retries = 5) {
   nextButton.setAttribute("aria-label", "Next track");
   nextButton.addEventListener("click", playNext);
 
-  // === Volume Control with Icon ===
   const volumeControl = document.createElement("div");
   volumeControl.classList.add("volume-control");
 
@@ -500,7 +467,6 @@ function createMusicPlayer(retries = 5) {
     if (sound) sound.volume(volumeSlider.value);
   });
 
-  // Append icon & slider together
   volumeControl.appendChild(volumeIcon);
   volumeControl.appendChild(volumeSlider);
 
@@ -515,15 +481,12 @@ function createMusicPlayer(retries = 5) {
 
   audioPlayerContainer.appendChild(container);
 
-  // Create track elements after appending to the DOM
   createTrackElements();
 
-  // Embed PDF if it exists
   if (pdfUrl) {
     const pdfContainer = document.createElement("div");
     pdfContainer.classList.add("pdf-container");
 
-    // Add zoom controls
     const zoomControls = document.createElement("div");
     zoomControls.classList.add("zoom-controls");
 
@@ -548,11 +511,9 @@ function createMusicPlayer(retries = 5) {
     zoomControls.appendChild(zoomInBtn);
     pdfContainer.appendChild(zoomControls);
 
-    // Add scrollable viewer container
     const scrollContainer = document.createElement("div");
     scrollContainer.classList.add("scroll-container");
 
-    // Add PDF.js viewer container
     const viewerContainer = document.createElement("div");
     viewerContainer.id = "pdf-viewer";
     scrollContainer.appendChild(viewerContainer);
@@ -561,9 +522,8 @@ function createMusicPlayer(retries = 5) {
     let currentScale = 1.5;
     let pdfDoc = null;
 
-    // Function to render all pages
     async function renderPages(scale) {
-      viewerContainer.innerHTML = ""; // Clear existing pages
+      viewerContainer.innerHTML = "";
       const numPages = pdfDoc.numPages;
 
       for (let pageNum = 1; pageNum <= numPages; pageNum++) {
@@ -583,7 +543,6 @@ function createMusicPlayer(retries = 5) {
       }
     }
 
-    // Zoom button handlers
     zoomInBtn.addEventListener("click", async () => {
       currentScale += 0.25;
       zoomLevel.textContent = Math.round((currentScale / 1.5) * 100) + "%";
@@ -598,12 +557,10 @@ function createMusicPlayer(retries = 5) {
       }
     });
 
-    // Load PDF.js
     loadScript(
       "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
     )
       .then(() => {
-        // Set worker source
         window.pdfjsLib.GlobalWorkerOptions.workerSrc =
           "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
 
@@ -622,11 +579,9 @@ function createMusicPlayer(retries = 5) {
     audioPlayerContainer.appendChild(pdfContainer);
   }
 
-  // Add rights statement at the bottom (always show, regardless of PDF presence)
   const rightsStatement = document.createElement("div");
   rightsStatement.classList.add("pdf-rights-statement");
 
-  // Determine the rights message based on use restriction
   let rightsMessage = "";
   if (useRestriction === "access is onsite only") {
     rightsMessage =
@@ -638,7 +593,6 @@ function createMusicPlayer(retries = 5) {
   audioPlayerContainer.appendChild(rightsStatement);
 }
 
-// === Play/Pause Functions using Howler.js ===
 function playTrack(index) {
   if (sound) {
     sound.stop();
@@ -648,11 +602,9 @@ function playTrack(index) {
   currentTrackIndex = index;
   const track = tracks[index];
 
-  // Check if we need to load a new audio file (switching disks)
   const needsNewAudio = !sound || sound._src[0] !== track.audioUrl;
 
   if (needsNewAudio) {
-    // Load new audio file for this disk
     sound = new Howl({
       src: [track.audioUrl],
       html5: true,
@@ -680,7 +632,6 @@ function playTrack(index) {
       },
     });
   } else {
-    // Same disk, just update the sprite and play
     sound = new Howl({
       src: [track.audioUrl],
       html5: true,
@@ -727,7 +678,6 @@ function playNext() {
   playTrack(currentTrackIndex);
 }
 
-// === Progress Bar Update ===
 function startProgressUpdate() {
   if (progressInterval) {
     clearInterval(progressInterval);
@@ -751,7 +701,6 @@ function startProgressUpdate() {
   }, 500);
 }
 
-// === Update UI ===
 function updateUI() {
   const playButton = document.querySelector("#play-btn");
   const playIcon = playButton.querySelector("span");
@@ -777,18 +726,17 @@ function updateUI() {
 
   if (playButton) {
     playIcon.innerHTML = isPlaying ? SVG_ICONS.pause : SVG_ICONS.play;
-    playButton.childNodes[1].nodeValue = isPlaying ? " Pause" : " Play"; // Updates text
+    playButton.childNodes[1].nodeValue = isPlaying ? " Pause" : " Play";
   }
 }
 
-// === Format Time ===
 function formatTime(seconds) {
   const mins = Math.floor(seconds / 60);
   const secs = Math.floor(seconds % 60);
   return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-// Cleanup function to stop audio and clear intervals
+// Cleanup function - call to stop playback and free resources
 function cleanupPlayer() {
   if (sound) {
     sound.stop();
@@ -803,83 +751,15 @@ function cleanupPlayer() {
   console.log("Audio player cleaned up");
 }
 
-// Initialization using metadata.json
 async function initPlayer() {
   try {
-    // Ensure Howler.js is loaded first
     await ensureHowlerLoaded();
 
     await loadMetadataJson();
     document.getElementById("audio-player")?.remove();
     createMusicPlayer();
-
-    // Add cleanup listeners for modal close and navigation
-    setupCleanupListeners();
   } catch (error) {
     console.error("Failed to initialize audio player:", error);
-    // Likely offsite or blocked; show access message
     showAccessRestrictionMessage();
   }
-}
-
-// Setup event listeners to stop audio when modal closes or user navigates
-function setupCleanupListeners() {
-  // Listen for modal close (Primo uses md-dialog)
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      // Check if modal/dialog is removed from DOM
-      mutation.removedNodes.forEach((node) => {
-        if (node.nodeType === 1) {
-          // Element node
-          // Check if the removed node contains our audio player
-          if (
-            node.querySelector &&
-            (node.querySelector("#audio-player-container") ||
-              node.id === "audio-player-container")
-          ) {
-            cleanupPlayer();
-          }
-          // Check if it's a Primo dialog/modal being closed
-          if (
-            node.classList &&
-            (node.classList.contains("md-dialog-container") ||
-              node.classList.contains("full-view-container"))
-          ) {
-            cleanupPlayer();
-          }
-        }
-      });
-    });
-  });
-
-  // Observe the body for modal removals
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true,
-  });
-
-  // Also listen for navigation events (single page app route changes)
-  window.addEventListener("hashchange", cleanupPlayer);
-  window.addEventListener("popstate", cleanupPlayer);
-
-  // Listen for Primo's route change events (Angular)
-  if (window.angular) {
-    const angularElement = window.angular.element(document.body);
-    if (angularElement && angularElement.injector) {
-      try {
-        const $rootScope = angularElement.injector().get("$rootScope");
-        $rootScope.$on("$locationChangeStart", cleanupPlayer);
-      } catch (e) {
-        console.log("Could not attach Angular route listener:", e);
-      }
-    }
-  }
-
-  // Fallback: listen for ESC key (common way to close modals)
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") {
-      // Small delay to allow modal to close first
-      setTimeout(cleanupPlayer, 100);
-    }
-  });
 }
