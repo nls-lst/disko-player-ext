@@ -76,24 +76,24 @@ The player expects a `metadata.json` file with the following structure:
 
 ```json
 {
-  "dodid": "266169666",
+  "dodid": "123456789",
   "use": "access is onsite only",
   "disks": [
     {
       "disk": "1",
-      "file": "21/267215439.21.ogg",
+      "file": "21/audio-disk1.21.ogg",
       "cue": {
-        "PERFORMER": "Sheena Wellington",
-        "TITLE": "Greentrax 10th Anniversary",
+        "PERFORMER": "Artist Name",
+        "TITLE": "Album Title",
         "tracks": [
           {
-            "TITLE": "The Nodding Song",
-            "PERFORMER": "Ceolbeg",
+            "TITLE": "Track One",
+            "PERFORMER": "Artist Name",
             "INDEX": "00:00:00"
           },
           {
-            "TITLE": "Doherty's / Return to Milltown",
-            "PERFORMER": "Tony McManus",
+            "TITLE": "Track Two",
+            "PERFORMER": "Artist Name",
             "INDEX": "03:50:67"
           }
         ]
@@ -101,14 +101,14 @@ The player expects a `metadata.json` file with the following structure:
     },
     {
       "disk": "2",
-      "file": "21/267215436.21.ogg",
+      "file": "21/audio-disk2.21.ogg",
       "cue": {
-        "PERFORMER": "Rua",
-        "TITLE": "The Music & Songs of Greentrax",
+        "PERFORMER": "Artist Name",
+        "TITLE": "Album Title",
         "tracks": [
           {
-            "TITLE": "No Gods and Precious Few Heroes",
-            "PERFORMER": "Brian McNeill",
+            "TITLE": "Track One",
+            "PERFORMER": "Artist Name",
             "INDEX": "00:00:00"
           }
         ]
@@ -117,18 +117,15 @@ The player expects a `metadata.json` file with the following structure:
   ],
   "scans": {
     "30": {
-      "files": ["267215424.30.jpg", "267215427.30.jpg"],
+      "files": ["cover.30.jpg", "disc1.30.jpg"],
       "partrefs": ["cover", "disc"],
-      "titles": [
-        "The Music & Songs of Greentrax",
-        "The Music & Songs of Greentrax"
-      ],
+      "titles": ["Album Title", "Album Title"],
       "width": 1000
     },
     "23": {
-      "files": ["267215421.23.pdf"],
+      "files": ["booklet.23.pdf"],
       "partrefs": ["booklet"],
-      "titles": ["The Music & Songs of Greentrax"]
+      "titles": ["Album Title"]
     }
   }
 }
