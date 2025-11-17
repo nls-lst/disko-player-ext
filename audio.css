@@ -1,0 +1,409 @@
+/* *** Main audio player *** */
+#audio-player {
+  background-color: #1e1e1e;
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: space-between;
+  position: relative;
+}
+
+/* Playlist Section */
+.playlist {
+  width: 100%;
+  padding: 16px;
+  border-right: 1px solid #2a2a2a;
+  max-height: calc(8 * 60px + 32px); /* 8 tracks * 60px height + padding */
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar Styling */
+.playlist::-webkit-scrollbar {
+  width: 4px;
+}
+.playlist::-webkit-scrollbar-track {
+  background: #2a2a2a;
+  border-radius: 4px;
+}
+.playlist::-webkit-scrollbar-thumb {
+  background: #d268a5;
+  border-radius: 4px;
+}
+.playlist::-webkit-scrollbar-thumb:hover {
+  background: #b8508a;
+}
+.playlist h3 {
+  font-size: 20px;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+/* Disk Navigation (for multi-disk albums) */
+.disk-navigation {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 8px 0;
+  border-bottom: 1px solid #ddd;
+  position: sticky;
+  top: -1rem;
+  z-index: 5;
+  background: rgba(30, 30, 30, 0.95);
+  backdrop-filter: blur(6px);
+  padding-top: 12px;
+}
+.disk-navigation a {
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 4px 8px;
+  border: 2px solid white;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+.disk-navigation a:hover {
+  color: #d268a5;
+  background: transparent;
+  box-shadow: none;
+}
+.disk-navigation a:focus {
+  outline: #d268a5 2px solid;
+}
+
+/* Disk Headings (separating disk sections in tracklist) */
+.disk-heading {
+  font-weight: 600;
+  font-size: 16px;
+  scroll-margin-top: 70px;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  border-bottom: 2px solid #333;
+  color: white;
+}
+
+.track {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.3s;
+  outline: none;
+}
+.track:hover {
+  background-color: #2a2a2a;
+}
+.track span {
+  font-size: 18px;
+  margin-right: 8px;
+  transition: opacity 0.2s;
+}
+.track-info p {
+  margin: 0;
+}
+.track-info p:last-child {
+  color: #ccc;
+}
+.track-duration {
+  margin-left: auto;
+  font-size: 14px;
+  color: #ccc;
+}
+
+/* Album Section */
+.album {
+  flex-grow: 1;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.album img {
+  width: 140px;
+  height: 140px;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+.album h2 {
+  font-size: 22px;
+  margin: 0;
+}
+.album p {
+  color: #ccc;
+  font-size: 16px;
+  margin: 8px 0;
+}
+
+/* Album Details */
+.details {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.info {
+  margin-left: 16px;
+}
+
+/* Play Button */
+.play-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #d268a5;
+  color: white;
+  border: 2px solid #d268a5;
+  padding: 12px 24px;
+  border-radius: 24px;
+  font-size: 18px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s ease-in-out, color 0.3s ease-in-out;
+  text-transform: none;
+  min-width: 120px;
+}
+.play-button:hover {
+  color: #d268a5;
+}
+.play-button span {
+  font-size: 24px;
+  margin-right: 8px;
+  transition: color 0.3s ease-in-out;
+}
+.play-button:hover span {
+  color: #d268a5;
+}
+.play-button:hover svg path {
+  fill: #d268a5;
+}
+
+/* Progress Bar */
+.progress-container {
+  margin-top: 10px;
+}
+.progress-bar {
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(
+    to right,
+    #d268a5 var(--progress, 0%),
+    #444 var(--progress, 0%)
+  );
+  border-radius: 5px;
+  appearance: none;
+  outline: none;
+  transition: background 0.3s ease-in-out;
+}
+.progress-bar::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #d268a5;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Playback Controls */
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 12px;
+}
+.controls button {
+  background: none;
+  border: none;
+  font-size: 28px;
+  cursor: pointer;
+  transition: color 0.3s;
+  flex-shrink: 0;
+}
+
+.controls .play-button {
+  width: 140px;
+}
+
+.controls button:hover {
+  color: #d268a5;
+}
+.controls button:hover svg path {
+  fill: #d268a5;
+}
+.material-symbols-outlined {
+  font-size: inherit;
+  line-height: 2;
+}
+
+/* Volume Controls */
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.volume-icon {
+  font-size: 24px;
+  transition: color 0.3s ease-in-out;
+}
+.volume-slider {
+  width: 100px;
+  appearance: none;
+  height: 4px;
+  background: #444;
+  border-radius: 5px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+.volume-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #d268a5;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+/* Now Playing */
+.time-display {
+  font-size: 14px;
+  color: #ccc;
+  text-align: center;
+  margin-bottom: 5px;
+}
+.playing-track {
+  background-color: #d268a5;
+  border-radius: 6px;
+}
+.playing-track .track-info p {
+  color: white;
+}
+.playing-track .track-duration {
+  color: white;
+}
+#now-playing {
+  font-size: 14px;
+  color: #aaa;
+  height: 0;
+  margin: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: height 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+}
+#now-playing.active {
+  height: 20px;
+  margin: 8px 0;
+  opacity: 1;
+}
+
+/* Focus styles */
+.track:focus,
+.play-button:focus,
+.controls button:focus,
+.progress-bar:focus,
+.volume-slider:focus {
+  outline: solid #d268a5 3px !important;
+  outline-offset: 2px;
+}
+/* *** END Main audio player *** */
+
+/* *** PDF Viewer Styling *** */
+.pdf-container {
+  margin-top: 20px;
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #525659;
+}
+
+.pdf-container .zoom-controls {
+  padding: 10px;
+  background-color: #3a3a3a;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.pdf-container .zoom-btn {
+  padding: 5px 15px;
+  background: #d268a5;
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 18px;
+}
+
+.pdf-container .zoom-btn:hover {
+  background: #b8508a;
+}
+.pdf-container .zoom-btn:focus {
+  outline: solid white 3px !important;
+  outline-offset: 2px;
+}
+
+.pdf-container .zoom-level {
+  color: white;
+  padding: 5px 15px;
+  min-width: 60px;
+  text-align: center;
+}
+
+.pdf-container .scroll-container {
+  max-height: 800px;
+  overflow: auto;
+  padding: 20px;
+}
+
+#pdf-viewer canvas {
+  display: block;
+  margin: 0 auto 10px auto;
+}
+
+/* *** END PDF Viewer Styling *** */
+
+/* *** Audio Access Restriction Message *** */
+.audio-access-message {
+  padding: 20px;
+  margin: 12px 0;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background: #fafafa;
+  color: #333;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.access-message-icon {
+  flex-shrink: 0;
+  color: #14133b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.access-message-text {
+  flex-grow: 1;
+}
+
+/* *** END Audio Access Restriction Message *** */
+
+/* *** START PDF Rights Statement *** */
+
+.pdf-rights-statement {
+  padding: 15px 20px;
+  margin-top: 20px;
+  background-color: #3a3a3a;
+  color: white;
+  text-align: center;
+  font-size: 14px;
+  border-top: 1px solid #ddd;
+  border-radius: 0 0 8px 8px;
+}
+
+/* *** END PDF Rights Statement *** */
